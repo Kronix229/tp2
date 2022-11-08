@@ -32,7 +32,7 @@ func (usuario usuarioImplementacion[string]) PublicarPost(arr []string, dicc TDA
 		post_prio := new(postPrioridad)
 		post_prio.prioridad = val_abs(user.afinidad - afinidad)
 		post_prio.post = post
-		user.feed.Encolar(post_prio)
+		user.feed.Encolar(post_prio) //puede ser que no funcione porque Post no es comparable
 	}
 }
 func (usuario *usuarioImplementacion[string]) ScrollFeed() error {
