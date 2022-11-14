@@ -2,54 +2,74 @@ package usuario
 
 import (
 	"algogram/errores"
+	TDAHash "algogram/hash"
 	TDAHeap "algogram/heap"
 )
 
 type usuarioImplementacion[T comparable] struct {
-	nombre   string //creo que no es necesario
-	feed     TDAHeap.ColaPrioridad[T]
-	afinidad int
+	nombre           string //creo que no es necesario
+	feed             TDAHeap.ColaPrioridad[*postPrioridad]
+	afinidad         int
+	cantidad_de_post int
 }
 type postPrioridad struct {
 	prioridad int
 	post      Post
 }
 
-func CrearUsuario(nombre string, afinidad int) Usuario[string, int] {
+func CrearUsuario(nombre string, afinidad int) Usuario[string] {
 	usuario := new(usuarioImplementacion[string])
 	usuario.nombre = nombre
 	usuario.afinidad = afinidad
-	usuario.feed = TDAHeap.CrearHeap[postPrioridad](cmp_prioridad)
+	usuario.feed = TDAHeap.CrearHeap[*postPrioridad](cmp_prioridad)
 	return usuario
 }
 
-func (usuario usuarioImplementacion[string]) PublicarPost(arr []string, dicc TDAHeap.Diccionario[K, V], post Post, afinidad int) {
-	for _, nombre := range arr {
-		user := dicc.Obtener(nombre) // dicc debe ser un diccionario del TDA Usuario
-		if user.nombre == usuario.nombre {
-			continue
+func (usuario *usuarioImplementacion[T]) PublicarPost(usuario_loggeado Usuario[string], dicc TDAHash.Diccionario[string, Usuario[string]], post Post, afinidad int) {
+	dicc.Iterar(func(clave string, dato Usuario[string]) bool {
+		if clave == usuario_loggeado.DevolverNombre() {
+			return true
 		}
 		post_prio := new(postPrioridad)
-		post_prio.prioridad = val_abs(user.afinidad - afinidad)
+		post_prio.prioridad = val_abs(dato.DevolverAfinidad() - afinidad)
 		post_prio.post = post
-		user.feed.Encolar(post_prio) //puede ser que no funcione porque Post no es comparable
-	}
+		dato.ActualizarFeed(post_prio)
+		return true
+	})
+	usuario.cantidad_de_post++
 }
 func (usuario *usuarioImplementacion[string]) ScrollFeed() error {
 	if usuario.feed.EstaVacia() {
-		return errores.ErrorFinFeed{}
+		return errores.ErrorFindFeed{}
 	}
 	post_prio := usuario.feed.Desencolar()
 	post_prio.post.MostrarPost()
 	return nil
 }
+
+func (usuario usuarioImplementacion[T]) DevolverNombre() string {
+	return usuario.nombre
+}
+
+func (usuario usuarioImplementacion[T]) DevolverAfinidad() int {
+	return usuario.afinidad
+}
+
+func (usuario usuarioImplementacion[T]) DevolverCantidadPost() int {
+	return usuario.cantidad_de_post
+}
+
+func (usuario *usuarioImplementacion[T]) ActualizarFeed(post *postPrioridad) {
+	usuario.feed.Encolar(post)
+}
+
 func val_abs(afinidad int) int {
 	if afinidad < 0 {
 		return -afinidad
 	}
 	return afinidad
 }
-func cmp_prioridad(prio1, prio2 postPrioridad) int {
+func cmp_prioridad(prio1, prio2 *postPrioridad) int {
 	if prio1.prioridad > prio2.prioridad {
 		return -1
 	}

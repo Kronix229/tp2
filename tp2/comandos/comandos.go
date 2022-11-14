@@ -26,3 +26,9 @@ type Logout struct{}
 func (c Logout) Despedir() string {
 	return "Adios"
 }
+
+type Publicar struct{}
+
+func (c Publicar) ConfirmarPublicacion() string {
+	return "Post publicado"
+}

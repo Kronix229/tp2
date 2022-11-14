@@ -36,9 +36,9 @@ func (e ErrorPostInexistente) Error() string {
 	return "Error: Usuario no loggeado o Post inexistente."
 }
 
-type ErrorFinFeed struct{}
+type ErrorFindFeed struct{}
 
-func (e ErrorFinFeed) Error() string {
+func (e ErrorFindFeed) Error() string {
 	return "Usuario no loggeado o no hay mas posts para ver."
 }
 

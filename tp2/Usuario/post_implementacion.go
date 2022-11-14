@@ -32,11 +32,11 @@ func (post postImplementacion) MostrarPost() {
 	fmt.Printf("%s dijo : %s\n", post.Creador, post.Texto)
 	fmt.Printf("Likes: %d\n", post.Likes)
 }
-func (post *postImplementacion) LikearPost(usuario Usuario) { //podria ser el nombre en ves de TDA usuario
-	if post.Usuarios_like.Pertenece(usuario.nombre) {
+func (post *postImplementacion) LikearPost(usuario Usuario[string]) { //podria ser el nombre en ves de TDA usuario
+	if post.Usuarios_like.Pertenece(usuario.DevolverNombre()) {
 		return
 	}
-	post.Usuarios_like.Guardar(usuario.nombre, nil)
+	post.Usuarios_like.Guardar(usuario.DevolverNombre(), 0)
 	post.Likes++
 }
 
