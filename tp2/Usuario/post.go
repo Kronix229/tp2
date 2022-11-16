@@ -11,4 +11,6 @@ type Post interface {
 
 	//MostrarLikes muestra la cantidad de likes que tiene un post y los usuarios que le dieron like a dicho post
 	MostrarLikes() error
+
+	DevolverId() int
 }

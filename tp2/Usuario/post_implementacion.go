@@ -51,3 +51,7 @@ func (post postImplementacion) MostrarLikes() error {
 	}
 	return nil
 }
+
+func (post postImplementacion) DevolverId() int {
+	return post.ID
+}

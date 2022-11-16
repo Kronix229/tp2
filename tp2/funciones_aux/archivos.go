@@ -22,14 +22,13 @@ func Leerarchivo(archi []string) (*os.File, error) {
 }
 
 // Escanea los usuarios devolviendo un diccionario y los errores correspondientes si los hay,
-// donde la clave y el valor del diccionario son el nombre de los usuarios y su posicion en el archivo
-// respectivamente
+// donde la clave y el valor del diccionario son el nombre de los usuarios y su TDA correspondiente
 func Escaneararchivo(usuarios *os.File, usuarios_registrados *dicc.Diccionario[string, TDAUSUARIO.Usuario[string]]) {
 	scanner := bufio.NewScanner(usuarios)
-	linea := 1
+	posicion := 1
 	for scanner.Scan() {
-		usuario := TDAUSUARIO.CrearUsuario(scanner.Text(), linea)
+		usuario := TDAUSUARIO.CrearUsuario(scanner.Text(), posicion)
 		(*usuarios_registrados).Guardar(scanner.Text(), usuario)
-		linea++
+		posicion++
 	}
 }

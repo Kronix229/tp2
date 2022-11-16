@@ -9,7 +9,7 @@ func (e ErrorLeerArchivo) Error() string {
 type ErrorParametros struct{}
 
 func (e ErrorParametros) Error() string {
-	return "Error: Falatan parametros."
+	return "Error: Faltan parametros."
 }
 
 type ErrorUsuarioLoggeado struct{}

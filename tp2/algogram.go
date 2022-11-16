@@ -6,15 +6,15 @@ import (
 	errores "algogram/errores"
 	faux "algogram/funciones_aux"
 	TDADICC "algogram/hash"
-	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
 const (
-	// Lo puse para compara, probablemente habra que cambiarle el nombre
 	PARAMETROS_NECESARIOS = 1
+	CANTIDAD_DE_VARIABLES = 6
 )
 
 func main() {
@@ -29,11 +29,9 @@ func main() {
 	usuarios_registrados := TDADICC.CrearHash[string, TDAUSUARIO.Usuario[string]]()
 	faux.Escaneararchivo(usuarios, &usuarios_registrados)
 	defer usuarios.Close()
-	scanner := bufio.NewScanner(os.Stdin)
-	login := c.Login{User: "", Conectado: false}
+	scanner, login, posteos, id := faux.Inicializarvariables()
 	for scanner.Scan() {
-		comando, parametro, _ := strings.Cut(scanner.Text(), " ")
-		comando, parametro = string(comando), string(parametro)
+		comando, parametro := faux.InicializarComandosyParametro(scanner)
 		switch comando {
 		case "Login":
 			parametros := strings.Split(parametro, " ")
@@ -64,7 +62,9 @@ func main() {
 			// obtengo el usuario que esta actualmente loggeado
 			usuario_loggeado := usuarios_registrados.Obtener(login.User)
 			// Creo su post pasando por parametros la cantidad de post que hizo(me sirve para tener conteo con el id), el texto  su nombre
-			nuevo_Post := TDAUSUARIO.CrearPost(usuario_loggeado.DevolverCantidadPost(), parametro, usuario_loggeado.DevolverNombre())
+			nuevo_Post := TDAUSUARIO.CrearPost(id, parametro, usuario_loggeado.DevolverNombre())
+			posteos.Guardar(id, nuevo_Post)
+			id++
 			// Al publicar le paso el usuario actual, todos los usuarios registrados, el post y la afinidad del usuario actual
 			usuario_loggeado.PublicarPost(usuario_loggeado, usuarios_registrados, nuevo_Post, usuario_loggeado.DevolverAfinidad())
 			fmt.Println(c.Publicar{}.ConfirmarPublicacion())
@@ -74,12 +74,45 @@ func main() {
 				continue
 			}
 			usuario_loggeado := usuarios_registrados.Obtener(login.User)
-			fmt.Println(usuario_loggeado.ScrollFeed())
-
+			err = usuario_loggeado.ScrollFeed()
+			if err != nil {
+				fmt.Println(err)
+			}
+		case "Likear_post":
+			parametros := strings.Split(parametro, " ")
+			id, err = strconv.Atoi(parametro)
+			if !faux.ControlDeParametros(len(parametros), PARAMETROS_NECESARIOS) || err != nil {
+				fmt.Println(errores.ErrorParametros{})
+				continue
+			}
+			if !posteos.Pertenece(id) {
+				fmt.Println(errores.ErrorPostInexistente{})
+				continue
+			}
+			usuario_loggeado := usuarios_registrados.Obtener(login.User)
+			post := posteos.Obtener(id)
+			post.LikearPost(usuario_loggeado)
+			fmt.Println(c.Likear{}.LikearPost())
+		case "Mostrar_likes":
+			parametros := strings.Split(parametro, " ")
+			id, err = strconv.Atoi(parametro)
+			if !faux.ControlDeParametros(len(parametros), PARAMETROS_NECESARIOS) || err != nil {
+				fmt.Println(errores.ErrorParametros{})
+				continue
+			}
+			if !posteos.Pertenece(id) {
+				fmt.Println(errores.ErrorPostInexistente{})
+				continue
+			}
+			post := posteos.Obtener(id)
+			err = post.MostrarLikes()
+			if err != nil {
+				fmt.Println(err)
+			}
 		default:
 			// Esto es algo estetico jaja
 			fmt.Printf("Comandos disponibles: \n")
-			for i := 0; i < 6; i++ {
+			for i := 0; i < CANTIDAD_DE_VARIABLES; i++ {
 				fmt.Println(faux.Devolvercomandos(i))
 			}
 		}

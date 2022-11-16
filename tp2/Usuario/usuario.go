@@ -1,6 +1,9 @@
 package usuario
 
-import TDAhash "algogram/hash"
+import (
+	TDAhash "algogram/hash"
+	TDAHeap "algogram/heap"
+)
 
 // Usuario modela un usuario, con la capacidad de realizar las acciones permitidas a los usuarios en AlgoGram
 type Usuario[K comparable] interface {
@@ -17,7 +20,5 @@ type Usuario[K comparable] interface {
 
 	DevolverAfinidad() int
 
-	DevolverCantidadPost() int
-
-	ActualizarFeed(*postPrioridad)
+	DevolverFeed() TDAHeap.ColaPrioridad[*postPrioridad]
 }
