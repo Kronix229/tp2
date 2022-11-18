@@ -1,6 +1,6 @@
 package diccionario
 
-import TDAPila "algogram/abb/pila"
+import TDAPila "diccionario/pila"
 
 type nodoAbb[K comparable, V any] struct {
 	izq   *nodoAbb[K, V]
@@ -29,50 +29,36 @@ func CrearABB[K comparable, V any](funcion_cmp func(K, K) int) DiccionarioOrdena
 	return abb
 }
 func (abb *abb[K, V]) Guardar(clave K, valor V) {
-	if abb.raiz == nil {
-		abb.raiz = abb.crearNodo(clave, valor)
-		abb.cantidad++
-	} else if abb.raiz.clave == clave {
+	padre, hijo := abb.raiz.buscar(clave, abb)
+	if padre == nil {
+		if hijo == nil {
+			abb.raiz = crearNodo(clave, valor)
+			abb.cantidad++
+			return
+		}
 		abb.raiz.dato = valor
-	} else {
-		abb.raiz.guardar(clave, valor, abb)
+		return
 	}
-}
-func (nodo *nodoAbb[K, V]) guardar(clave K, valor V, abb *abb[K, V]) {
-	padre, _ := abb.raiz.buscar(clave, abb)
 	if abb.cmp(padre.clave, clave) > 0 {
-		if padre.izq != nil {
-			padre.izq.dato = valor
-			return
-		}
-		padre.izq = abb.crearNodo(clave, valor)
+		actualizar_hijo(abb, &padre.izq, clave, valor)
 	} else {
-		if padre.der != nil {
-			padre.der.dato = valor
-			return
-		}
-		padre.der = abb.crearNodo(clave, valor)
+		actualizar_hijo(abb, &padre.der, clave, valor)
 	}
-	abb.cantidad++
-
 }
+func actualizar_hijo[K comparable, V any](abb *abb[K, V], nodo **nodoAbb[K, V], clave K, valor V) {
+	if *nodo != nil {
+		(*nodo).dato = valor
+		return
+	}
+	*nodo = crearNodo(clave, valor)
+	abb.cantidad++
+}
+
 func (abb *abb[K, V]) Pertenece(clave K) bool {
-	if abb.raiz == nil {
-		return false
-	}
-	if abb.raiz.clave == clave {
-		return true
-	}
 	_, hijo := abb.raiz.buscar(clave, abb)
 	return hijo != nil
 }
 func (abb *abb[K, V]) Obtener(clave K) V {
-	if abb.raiz == nil {
-		panic("La clave no pertenece al diccionario")
-	}
-	if abb.raiz.clave == clave {
-		return abb.raiz.dato
-	}
 	_, hijo := abb.raiz.buscar(clave, abb)
 	if hijo == nil {
 		panic("La clave no pertenece al diccionario")
@@ -80,54 +66,38 @@ func (abb *abb[K, V]) Obtener(clave K) V {
 	return hijo.dato
 }
 func (abb *abb[K, V]) Borrar(clave K) V {
-	if abb.raiz == nil {
-		panic("La clave no pertenece al diccionario")
-	}
-	return abb.raiz.borrar(clave, abb)
-}
-func (nodo *nodoAbb[K, V]) borrar(clave K, abb *abb[K, V]) V {
-	var padre *nodoAbb[K, V]
-	var hijo *nodoAbb[K, V]
-	if abb.raiz.clave == clave {
-		padre = nil
-		hijo = abb.raiz
-	} else {
-		padre, hijo = nodo.buscar(clave, abb)
-	}
+	padre, hijo := abb.raiz.buscar(clave, abb)
 	if hijo == nil {
 		panic("La clave no pertenece al diccionario")
 	}
 	res := hijo.dato
-	if hijo.der == nil && hijo.izq == nil {
-		if padre != nil {
-			if padre.der == hijo {
-				padre.der = nil
-			} else {
-				padre.izq = nil
-			}
-		} else {
-			abb.raiz = nil
-		}
-		abb.cantidad--
-		return res
+	if hijo.der == nil || hijo.izq == nil {
+		padre.borrar_no_dos_hijos(abb, hijo)
+	} else {
+		padre.borrar_dos_hijos(abb, hijo)
 	}
-	if hijo.der != nil && hijo.izq == nil || hijo.der == nil && hijo.izq != nil {
-		reemplazo := hijo.izq
-		if hijo.der != nil {
-			reemplazo = hijo.der
-		}
-		if padre != nil {
-			if padre.der == hijo {
-				padre.der = reemplazo
-			} else {
-				padre.izq = reemplazo
-			}
-		} else {
-			abb.raiz = reemplazo
-		}
-		abb.cantidad--
-		return res
+	return res
+}
+func (padre *nodoAbb[K, V]) borrar_no_dos_hijos(abb *abb[K, V], hijo *nodoAbb[K, V]) {
+	var reemplazo *nodoAbb[K, V]
+	if hijo.izq != nil {
+		reemplazo = hijo.izq
 	}
+	if hijo.der != nil {
+		reemplazo = hijo.der
+	}
+	if padre != nil {
+		if padre.der == hijo {
+			padre.der = reemplazo
+		} else {
+			padre.izq = reemplazo
+		}
+	} else {
+		abb.raiz = reemplazo
+	}
+	abb.cantidad--
+}
+func (padre *nodoAbb[K, V]) borrar_dos_hijos(abb *abb[K, V], hijo *nodoAbb[K, V]) {
 	reemplazo := hijo.izq // caso 2 hijos
 	for reemplazo.der != nil {
 		reemplazo = reemplazo.der
@@ -136,36 +106,53 @@ func (nodo *nodoAbb[K, V]) borrar(clave K, abb *abb[K, V]) V {
 	nuevo_dato := abb.Borrar(reemplazo.clave)
 	hijo.clave = nueva_clave
 	hijo.dato = nuevo_dato
-	return res
-
 }
+
 func (abb *abb[K, V]) Cantidad() int {
 	return abb.cantidad
 }
 func (d *abb[K, V]) Iterar(visitar func(clave K, valor V) bool) {
 	nodo_actual := d.raiz
-	nodo_actual.iterar(visitar)
+	seguir := true
+	cont := &seguir
+	nodo_actual.iterar(visitar, cont)
 }
 
-func (nodo *nodoAbb[K, V]) iterar(visitar func(clave K, valor V) bool) {
-	if nodo == nil {
+func (nodo *nodoAbb[K, V]) iterar(visitar func(clave K, valor V) bool, seguir *bool) {
+	if nodo == nil || !(*seguir) {
 		return
 	}
-	nodo.izq.iterar(visitar)
-	visitar(nodo.clave, nodo.dato)
-	nodo.der.iterar(visitar)
-}
-func (d *abb[K, V]) Iterador() IterDiccionario[K, V] {
-	iterador, p := d.inicializar_iterador_pila()
-	iterador.actual = d.raiz
-	for iterador.actual != nil {
-		p.Apilar(*iterador.actual)
-		iterador.actual = iterador.actual.izq
+	nodo.izq.iterar(visitar, seguir)
+	if *seguir && !visitar(nodo.clave, nodo.dato) {
+		*seguir = false
 	}
-	iterador.pila = p
+	nodo.der.iterar(visitar, seguir)
+}
+
+func (d *abb[K, V]) Iterador() IterDiccionario[K, V] {
+	iterador, pila := d.inicializar_iterador_pila()
+	iterador.dicc = d
+	iterador.pila = pila
+	if d.raiz == nil {
+		return iterador
+	}
+	iterador.actual = d.raiz
+	iterador.desde = d.valor_minimo()
+	iterador.hasta = d.valor_maximo()
+	iterador.actualizar_actual()
 	return iterador
 }
+
 func (nodo *nodoAbb[K, V]) buscar(clave K, abb *abb[K, V]) (*nodoAbb[K, V], *nodoAbb[K, V]) {
+	if abb.raiz == nil {
+		return nil, nil
+	}
+	if abb.raiz.clave == clave {
+		return nil, abb.raiz
+	}
+	return nodo.buscar_recu(clave, abb)
+}
+func (nodo *nodoAbb[K, V]) buscar_recu(clave K, abb *abb[K, V]) (*nodoAbb[K, V], *nodoAbb[K, V]) {
 	cmp := abb.cmp(nodo.clave, clave)
 	if cmp > 0 && nodo.izq == nil {
 		return nodo, nil
@@ -189,10 +176,8 @@ func (i *iteradorExternoAbb[K, V]) HaySiguiente() bool {
 		if i.pila.EstaVacia() || i.dicc.cmp(i.pila.VerTope().clave, *i.hasta) > 0 {
 			return false
 		}
-	} else if i.pila.EstaVacia() { // caso para el iterador sin rango
-		return false
 	}
-	return true
+	return !i.pila.EstaVacia() // caso para el iterador sin rango
 }
 
 func (i *iteradorExternoAbb[K, V]) VerActual() (clave K, valor V) {
@@ -208,46 +193,22 @@ func (i *iteradorExternoAbb[K, V]) Siguiente() K {
 	}
 	nodo_anterior := i.pila.Desapilar()
 	i.actual = nodo_anterior.der
-	for i.actual != nil {
-		if i.desde != nil && i.hasta != nil {
-			if i.dicc.cmp(i.actual.clave, *i.desde) > 0 {
-				i.pila.Apilar(*i.actual)
-				i.actual = i.actual.izq
-			}
-		} else {
-			i.pila.Apilar(*i.actual)
-			i.actual = i.actual.izq
-		}
-	}
+	i.actualizar_actual()
 	return nodo_anterior.clave
 }
 func (d *abb[K, V]) IteradorRango(desde *K, hasta *K) IterDiccionario[K, V] {
-	iterador, p := d.inicializar_iterador_pila()
+	iterador, pila := d.inicializar_iterador_pila()
 	if d.raiz == nil {
-		iterador.pila = p
+		iterador.pila = pila
 		iterador.dicc = d
 		return iterador
 	}
-	iterador.actual = d.raiz
 	if desde != nil || hasta != nil {
-		desde, hasta = d.asignar_autovalores_desde_hasta(desde, hasta)
-		for iterador.actual != nil {
-			if d.cmp(iterador.actual.clave, *desde) >= 0 && d.cmp(iterador.actual.clave, *hasta) <= 0 {
-				p.Apilar(*iterador.actual)
-				if iterador.actual.clave == *desde {
-					break
-				}
-			}
-			if d.cmp(iterador.actual.clave, *desde) > 0 {
-				iterador.actual = iterador.actual.izq
-			} else {
-				iterador.actual = iterador.actual.der
-			}
-		}
-		iterador.desde = desde
-		iterador.hasta = hasta
-		iterador.pila = p
+		iterador.actual = d.raiz
+		iterador.desde, iterador.hasta = d.asignar_autovalores_desde_hasta(desde, hasta)
 		iterador.dicc = d
+		iterador.pila = pila
+		iterador.actualizar_actual()
 		return iterador
 	}
 	return d.Iterador()
@@ -259,27 +220,33 @@ func (d *abb[K, V]) IterarRango(desde *K, hasta *K, visitar func(clave K, dato V
 			d.Iterar(visitar)
 		} else {
 			desde, hasta = d.asignar_autovalores_desde_hasta(desde, hasta)
-			d.iter_rango_recur(d.raiz, desde, hasta, visitar)
+			seguir := true
+			cont := &seguir
+			d.iter_rango_recur(d.raiz, desde, hasta, visitar, cont)
 		}
 	}
 }
 
-func (d *abb[K, V]) iter_rango_recur(nodo *nodoAbb[K, V], desde *K, hasta *K, visitar func(clave K, valor V) bool) {
-	if nodo == nil {
+func (d *abb[K, V]) iter_rango_recur(nodo *nodoAbb[K, V], desde *K, hasta *K, visitar func(clave K, valor V) bool, seguir *bool) {
+	if nodo == nil || !(*seguir) {
 		return
 	}
 	if d.cmp(nodo.clave, *desde) > 0 {
-		d.iter_rango_recur(nodo.izq, desde, hasta, visitar)
+		d.iter_rango_recur(nodo.izq, desde, hasta, visitar, seguir)
 	}
-	if d.cmp(nodo.clave, *desde) >= 0 && d.cmp(nodo.clave, *hasta) <= 0 {
-		visitar(nodo.clave, nodo.dato)
+	if *seguir {
+		if d.cmp(nodo.clave, *desde) >= 0 && d.cmp(nodo.clave, *hasta) <= 0 {
+			if !visitar(nodo.clave, nodo.dato) {
+				*seguir = false
+			}
+		}
 	}
 	if d.cmp(nodo.clave, *hasta) < 0 {
-		d.iter_rango_recur(nodo.der, desde, hasta, visitar)
+		d.iter_rango_recur(nodo.der, desde, hasta, visitar, seguir)
 	}
 }
 
-func (abb *abb[K, V]) crearNodo(clave K, valor V) *nodoAbb[K, V] {
+func crearNodo[K comparable, V any](clave K, valor V) *nodoAbb[K, V] {
 	nodo := new(nodoAbb[K, V])
 	nodo.clave = clave
 	nodo.dato = valor
@@ -289,14 +256,10 @@ func (abb *abb[K, V]) crearNodo(clave K, valor V) *nodoAbb[K, V] {
 // si desde es nil le asigno la clave de la raiz y si
 // hasta es nil le asigno el valor mas grande del arbol
 func (d *abb[K, V]) asignar_autovalores_desde_hasta(desde *K, hasta *K) (*K, *K) {
-	nodo_actual := *d.raiz
 	if desde == nil {
-		desde = &nodo_actual.clave
+		desde = d.valor_minimo()
 	} else if hasta == nil {
-		for nodo_actual.der != nil {
-			nodo_actual = *nodo_actual.der
-		}
-		hasta = &nodo_actual.clave
+		hasta = d.valor_maximo()
 	}
 	return desde, hasta
 }
@@ -306,4 +269,36 @@ func (d *abb[K, V]) inicializar_iterador_pila() (*iteradorExternoAbb[K, V], TDAP
 	iterador := new(iteradorExternoAbb[K, V])
 	p := TDAPila.CrearPilaDinamica[nodoAbb[K, V]]()
 	return iterador, p
+}
+
+func (i *iteradorExternoAbb[K, V]) actualizar_actual() {
+	for i.actual != nil {
+		if i.dicc.cmp(i.actual.clave, *i.desde) >= 0 && i.dicc.cmp(i.actual.clave, *i.hasta) <= 0 {
+			i.pila.Apilar(*i.actual)
+			if i.actual.clave == *i.desde {
+				break
+			}
+		}
+		if i.dicc.cmp(i.actual.clave, *i.desde) > 0 {
+			i.actual = i.actual.izq
+		} else {
+			i.actual = i.actual.der
+		}
+	}
+}
+
+func (d abb[K, V]) valor_minimo() *K {
+	nodo_actual := d.raiz
+	for nodo_actual.izq != nil {
+		nodo_actual = nodo_actual.izq
+	}
+	return &nodo_actual.clave
+}
+
+func (d abb[K, V]) valor_maximo() *K {
+	nodo_actual := d.raiz
+	for nodo_actual.der != nil {
+		nodo_actual = nodo_actual.der
+	}
+	return &nodo_actual.clave
 }
