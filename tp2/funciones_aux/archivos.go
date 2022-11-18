@@ -27,7 +27,7 @@ func Escaneararchivo(usuarios *os.File, usuarios_registrados *dicc.Diccionario[s
 	scanner := bufio.NewScanner(usuarios)
 	posicion := 1
 	for scanner.Scan() {
-		usuario := TDAUSUARIO.CrearUsuario(scanner.Text(), posicion)
+		usuario := TDAUSUARIO.CrearUsuario(posicion)
 		(*usuarios_registrados).Guardar(scanner.Text(), usuario)
 		posicion++
 	}

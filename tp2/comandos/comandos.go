@@ -13,7 +13,7 @@ func (c Login) Saludar() string {
 	return fmt.Sprintf("Hola %s", c.User)
 }
 
-// Cambia a true o false si el usuario se conecta o desconecta
+// Cambia a true o false si el usuario esta o no conectado
 func (c *Login) EstadoDelUsuario() {
 	if c.Conectado {
 		c.Conectado = false
@@ -39,6 +39,6 @@ func (c Publicar) ConfirmarPublicacion() string {
 type Likear struct{}
 
 // Informa al usuario que el post se likeo
-func (c Likear) LikearPost() string {
+func (c Likear) ConfirmarLike() string {
 	return "Post likeado"
 }

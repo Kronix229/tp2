@@ -7,7 +7,7 @@ type Post interface {
 	MostrarPost()
 
 	//LikearPost actuliza la cantidad de likes y los usuarios que le dieron likes a un post
-	LikearPost(usuario Usuario[string])
+	LikearPost(nombre_del_usuario string)
 
 	//MostrarLikes muestra la cantidad de likes que tiene un post y los usuarios que le dieron like a dicho post
 	MostrarLikes() error

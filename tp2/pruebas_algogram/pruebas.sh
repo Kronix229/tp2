@@ -19,15 +19,17 @@ for x in *.test; do
 
   if [[ $RET -ne 0 ]]; then
     echo -e "programa abortó con código $RET."
-    exit $RET
+    
 
   elif [[ -s $OUT ]]; then
     echo -e "output incorrecto:\n"
     cat $OUT
-    exit 1
+    wait
+    
 
   else
     echo -e "OK."
   fi
   echo
+wait
 done

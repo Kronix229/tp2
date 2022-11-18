@@ -12,9 +12,9 @@ const (
 )
 
 type postImplementacion struct {
-	ID            int //puede no ser necesario
+	ID            int
 	Texto         string
-	Creador       string //puede que no sea necesario
+	Creador       string
 	Likes         int
 	Usuarios_like TDAabb.DiccionarioOrdenado[string, int]
 }
@@ -29,14 +29,14 @@ func CrearPost(id int, texto string, creador string) Post {
 }
 func (post postImplementacion) MostrarPost() {
 	fmt.Printf("Post ID %d\n", post.ID)
-	fmt.Printf("%s dijo : %s\n", post.Creador, post.Texto)
+	fmt.Printf("%s dijo: %s\n", post.Creador, post.Texto)
 	fmt.Printf("Likes: %d\n", post.Likes)
 }
-func (post *postImplementacion) LikearPost(usuario Usuario[string]) { //podria ser el nombre en ves de TDA usuario
-	if post.Usuarios_like.Pertenece(usuario.DevolverNombre()) {
+func (post *postImplementacion) LikearPost(nombre_del_usuario string) { //podria ser el nombre en ves de TDA usuario
+	if post.Usuarios_like.Pertenece(nombre_del_usuario) {
 		return
 	}
-	post.Usuarios_like.Guardar(usuario.DevolverNombre(), 0)
+	post.Usuarios_like.Guardar(nombre_del_usuario, 0)
 	post.Likes++
 }
 
