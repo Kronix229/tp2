@@ -1,6 +1,6 @@
 package diccionario
 
-import TDAPila "diccionario/pila"
+import TDAPila "algogram/abb/pila"
 
 type nodoAbb[K comparable, V any] struct {
 	izq   *nodoAbb[K, V]

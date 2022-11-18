@@ -36,7 +36,6 @@ func (usuario *usuarioImplementacion[string]) ScrollFeed() error {
 	return nil
 }
 
-// le agrege por conveniencia
 func (usuario usuarioImplementacion[T]) DevolverAfinidad() int {
 	return usuario.afinidad
 }

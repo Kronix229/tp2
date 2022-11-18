@@ -2,6 +2,7 @@ package main
 
 import (
 	TDAUSUARIO "algogram/Usuario"
+	comandos "algogram/comandos"
 	faux "algogram/funciones_aux"
 	TDADICC "algogram/hash"
 	"fmt"
@@ -19,26 +20,26 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
 	usuarios_registrados := TDADICC.CrearHash[string, TDAUSUARIO.Usuario[string]]()
 	faux.Escaneararchivo(usuarios, &usuarios_registrados)
 	defer usuarios.Close()
-	scanner, login, posteos, id_global := faux.Inicializarvariables()
+	login := comandos.Login{User: "", Conectado: false}
+	scanner, posteos, id_global := faux.Inicializarvariables()
 	for scanner.Scan() {
 		comando, parametro := faux.InicializarComandosyParametro(scanner)
 		switch comando {
 		case "login":
-			faux.Login(usuarios_registrados, (&login), parametro)
+			login.LoggearUsuario(parametro, usuarios_registrados)
 		case "logout":
-			faux.Logout(&login)
+			comandos.Logout{}.Desloggear(&login)
 		case "publicar":
-			faux.Publicar(login, &id_global, parametro, posteos, usuarios_registrados)
+			comandos.Publicar{}.RealizarPublicacion(login, &id_global, parametro, posteos, usuarios_registrados)
 		case "ver_siguiente_feed":
-			faux.Mostrar_Siguiente_Feed(login, usuarios_registrados)
+			comandos.Publicar{}.Feed(login, usuarios_registrados)
 		case "likear_post":
-			faux.Likear_Post(parametro, login, posteos)
+			comandos.Likes{}.LikearPost(parametro, login, posteos)
 		case "mostrar_likes":
-			faux.Mostrar_Likes(parametro, posteos)
+			comandos.Likes{}.MostrarLikes(parametro, posteos)
 		}
 	}
 }
