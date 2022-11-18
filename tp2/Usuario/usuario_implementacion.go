@@ -21,21 +21,6 @@ func CrearUsuario(afinidad int) Usuario[string] {
 	return usuario
 }
 
-// Cambie el for por el iterador del diccionario asi evitada tener que crear un array de los usuarios
-// le actualiza a todos su feed menos el que esta loggeado(asi fue como lo entendi)
-// func (usuario *usuarioImplementacion[T]) PublicarPost(usuario_loggeado Usuario[string], dicc TDAHash.Diccionario[string, Usuario[string]], post Post, afinidad int) {
-// 	dicc.Iterar(func(clave string, dato Usuario[string]) bool {
-// 		if clave == usuario_loggeado.DevolverNombre() {
-// 			return true
-// 		}
-// 		post_prio := new(postPrioridad)
-// 		post_prio.prioridad = val_abs(dato.DevolverAfinidad() - afinidad)
-// 		post_prio.post = post
-// 		dato.DevolverFeed().Encolar(post_prio)
-// 		return true
-// 	})
-// }
-
 func (usuario *usuarioImplementacion[T]) PublicarPost(dato Usuario[string], post Post, afinidad int) {
 	post_prio := new(postPrioridad)
 	post_prio.prioridad = val_abs(dato.DevolverAfinidad() - afinidad)
